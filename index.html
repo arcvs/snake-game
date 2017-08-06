@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>snake:</title>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.js"></script>
+	<style>
+body {
+	color: red;
+}
+div, p, span {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	line-height: 0;
+}
+#fieldLine {
+	border: 4px solid #F3F3F3;
+	position: absolute;
+	/*top: 10%;*/
+	transfrom: translateY(-50%);
+}
+#fieldLine div {
+	width: 15px;
+	height: 15px;
+	display: inline-block;
+	border-left: 1px solid #f7fbfd;
+	border-bottom: 1px solid #f7fbfd;
+}
+.active {
+	background: #00C790;
+}
+.pig {
+	background-image: url(resources/pig.png);
+	background-size: 100%;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+	</style>
+</head>
+<body>
+	<h1>Snake</h1>
+	<div id="fieldLine"></div>
+	<script src="snake.js"></script>
+	<script>document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')</script>
+</body>
+</html>
