@@ -16,9 +16,9 @@ function Field(cols, rows) {
 
 Field.prototype.generationMap = function() {
 	for (var i = 0; i < this.numberSectors; i++) 
-		$('#fieldLine').append('<div>');
+		$('#gameZone').append('<div>');
 
-	$('#fieldLine').css('width', this.cols * 15 + this.cols);
+	$('#gameZone').css('width', this.cols * 15 + this.cols);
 };
 
 Field.prototype.generationMeat = function() {
@@ -27,7 +27,7 @@ Field.prototype.generationMeat = function() {
 		return Math.floor(Math.random() * (max - min + 1)) + min;
 	};
 	this.numberSectorMeat = getRandomInt(0, this.numberSectors - 1);
-	$("#fieldLine").children()[ this.numberSectorMeat ].className = 'pig';
+	$("#gameZone").children()[ this.numberSectorMeat ].className = 'pig';
 };
 
 function Pixel(x, y) {
@@ -57,7 +57,7 @@ function Snake( field ) {
 		});
 	};
 	
-	var fieldDOM = $("#fieldLine").children();
+	var fieldDOM = $("#gameZone").children();
 	
 	this._render = function(part) {
 
@@ -97,7 +97,7 @@ Snake.prototype.eatsMeat = function(bodyTailX, bodyTailY) {
 	if ( this.numberSectorHead == this.field.numberSectorMeat ) {
 		this.body.push( new Pixel( bodyTailX, bodyTailY ) );
 		this.field.hunger = true;
-		$("#fieldLine").children()[this.field.numberSectorMeat].className = '';
+		$("#gameZone").children()[this.field.numberSectorMeat].className = '';
 		this.speed -= 100;
 	}
 };
@@ -124,7 +124,7 @@ Snake.prototype.sleep = function() {
 
 Snake.prototype.bloodyDeath = function() {
 	this.activity = false;
-	$("#fieldLine").children()[this.numberSectorHead].style.background = 'red';
+	$("#gameZone").children()[this.numberSectorHead].style.background = 'red';
 };
 
 Snake.prototype.startPositionBody = function() {
