@@ -5,6 +5,11 @@ var RIGHT   = 39;
 var DOWN    = 40;
 var PAUSE   = 32;
 
+
+function pip(x,y){
+  return x + y;
+}
+
 function Field(cols, rows) {
 	this.cols = cols;
 	this.rows = rows;
@@ -45,7 +50,7 @@ function Snake( field ) {
 	this.speed = 200;
 
 	this.body || this.startPositionBody();
-	this.directionHead = { x : +0, y : 0 };
+	this.directionHead = { x : 0, y : 0 };
 	this.numberSectorHead;
 
 	this.stomach = [];
@@ -153,8 +158,10 @@ Snake.prototype.run = function() {
 	}, self.speed );
 };
 
-var field = new Field( 30, 25 );
+var field = new Field( 10, 8   );
+
 field.generationMap();
+
 var snake = new Snake( field );
 snake.run();
 

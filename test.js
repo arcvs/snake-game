@@ -1,9 +1,3 @@
-var { assert } = require('chai');
-
-require('../game.js');
-
-describe('pip', function() {
-  it('should return -1 when the value is not present', function() {
-    assert.equal(pip(1,9),10);
-  });
+QUnit.test('pip', function(assert){
+  assert.equal(pip(9,1), 10, 'Сумма верна 10');
 });
