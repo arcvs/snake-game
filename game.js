@@ -5,8 +5,9 @@ var UP      = 38;
 var RIGHT   = 39;
 var DOWN    = 40;
 var PAUSE   = 32;
+var BUFFER_KEY;
 
-var domBlockId = $('#gameZone');
+var gameBlockId = $('#gameZone');
 var statsBlockId = $('#stats');
 
 
@@ -23,12 +24,12 @@ function Field(cols, rows) {
 
 Field.prototype.generationMap = function() {
   for (var i = 0; i < this.numberSectors; i++) {
-    domBlockId.append('<div>');
+    gameBlockId.append('<div>');
   }
 
-  domBlockId.css('width', this.cols * 15 + this.cols);
+  gameBlockId.css('width', this.cols * 15 + this.cols);
 
-  this.cells = domBlockId.children();
+  this.cells = gameBlockId.children();
 };
 
 Field.prototype.generationMeat = function(python) {
@@ -131,7 +132,6 @@ Python.prototype.eatsMeat = function(positionHead) {
   if (positionHead === field.positionMeat) {
     this.body.push(0);
     field.hunger = true;
-    field.cells[field.positionMeat].className = '';
   }
 };
 
@@ -169,25 +169,22 @@ Game.prototype.run = function(field, python) {
 Game.prototype.start = function() {
   this.active = 1;
 }
+
 Game.prototype.pause = function() {
   this.active = (this.active === 0) ? 1 : 0;
 }
 
-var game = new Game();
-
-var field = new Field(28, 20);
-var python = new Python(game, field);
-
-game.run(field, python);
-
 function dispatcherEventKey(keyCode) {
 
-  //var bufferCurentKey = keyCode;
+  if(BUFFER_KEY === DOWN && keyCode === UP || BUFFER_KEY === UP && keyCode === DOWN) {
+    return 1;
+  }
 
-  //if (bufferCurentKey === UP  && keyCode === UP) {
-    //return 1;
-    //console.log( keyCode );
-  //}
+  if(BUFFER_KEY === RIGHT && keyCode === LEFT || BUFFER_KEY === LEFT && keyCode === RIGHT) {
+    return 1;
+  }
+
+  BUFFER_KEY = keyCode;
 
   switch (keyCode) {
     case UP      : python.direction = {x : 0, y : -1}; game.start(); break;
@@ -199,9 +196,12 @@ function dispatcherEventKey(keyCode) {
 };
 
 document.onkeydown = function(event) {
-  //console.log(event.keyCode);
   if((event.keyCode >= 32) && (event.keyCode <= 40)) {
     dispatcherEventKey(event.keyCode);
   };
 };
 
+var game = new Game();
+var field = new Field(28, 20);
+var python = new Python(game, field);
+game.run(field, python);
