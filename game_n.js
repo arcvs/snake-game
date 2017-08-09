@@ -11,18 +11,18 @@ var statsBlockId = $('#stats');
 
 
 function Field(cols, rows) {
-	this.cols = cols;
-	this.rows = rows;
-	this.numberSectors = this.cols * this.rows;
+  this.cols = cols;
+  this.rows = rows;
+  this.numberSectors = this.cols * this.rows;
 
-	this.hunger = false;
+  this.hunger = false;
   this.positionMeat;
   this.cells;
   this.generationMap();
 };
 
 Field.prototype.generationMap = function() {
-	for (var i = 0; i < this.numberSectors; i++) {
+  for (var i = 0; i < this.numberSectors; i++) {
     domBlockId.append('<div>');
   }
 
@@ -35,8 +35,8 @@ Field.prototype.generationMeat = function(python) {
 
   var self = this;
 
-	function getRandomInt(min, max) {
-		return Math.floor(Math.random() * (max - min + 1)) + min;
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
   (function checkPositionPythonAndMeat() {
@@ -49,7 +49,7 @@ Field.prototype.generationMeat = function(python) {
   })()
 
   this.hunger = false;
-	this.cells[this.positionMeat].className = 'meat';
+  this.cells[this.positionMeat].className = 'meat';
 };
 
 function converterPositionToAxes(field, a) {
@@ -64,7 +64,7 @@ function converterAxesToPosition(field, a, b) {
 };
 
 function Python(game, field) {
-	this.direction = {x : 0, y : 0};
+  this.direction = {x : 0, y : 0};
   this.body = this.setStartPositionFild(field);
   this.nextPositionStep = NaN;
 
@@ -180,19 +180,27 @@ var python = new Python(game, field);
 
 game.run(field, python);
 
-function dispatcherEventKey(step) {
-	switch ( step ) {
-		case UP      : python.direction = {x : 0, y : -1}; game.start(); break;
-		case DOWN    : python.direction = {x : 0, y : +1}; game.start(); break;
-		case LEFT    : python.direction = {x : -1, y : 0}; game.start(); break;
-		case RIGHT   : python.direction = {x : +1, y : 0}; game.start(); break;
-		case PAUSE   : game.pause(); break;
-	};
+function dispatcherEventKey(keyCode) {
+
+  //var bufferCurentKey = keyCode;
+
+  //if (bufferCurentKey === UP  && keyCode === UP) {
+    //return 1;
+    //console.log( keyCode );
+  //}
+
+  switch (keyCode) {
+    case UP      : python.direction = {x : 0, y : -1}; game.start(); break;
+    case DOWN    : python.direction = {x : 0, y : +1}; game.start(); break;
+    case LEFT    : python.direction = {x : -1, y : 0}; game.start(); break;
+    case RIGHT   : python.direction = {x : +1, y : 0}; game.start(); break;
+    case PAUSE   : game.pause(); break;
+  };
 };
 
 document.onkeydown = function(event) {
   //console.log(event.keyCode);
-	if((event.keyCode >= 32) && (event.keyCode <= 40)) {
+  if((event.keyCode >= 32) && (event.keyCode <= 40)) {
     dispatcherEventKey(event.keyCode);
-	};
+  };
 };
