@@ -5,20 +5,42 @@
     <title>snake:</title>
     <link rel="stylesheet" href="qunit-2.4.0.css">
     <style>
-body {
-  color: red;
-}
 div, p, span {
   margin: 0;
   padding: 0;
   border: 0;
 }
+.wrap {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: auto;
+  white-space: nowrap;
+  text-align: center;
+  font-size: 0;
+  &:before {
+    height: 100%;
+    display: inline-block;
+    vertical-align: middle;
+    content: '';
+  }
+}
+.content {
+  display: inline-block;
+  white-space: normal;
+  vertical-align: middle;
+  text-align: center;
+  font-size: 10pt;
+}
+
 #gameZone {
+  margin-top: 30px;
   border: 4px solid #F3F3F3;
   line-height: 0;
-  transfrom: translateY(-50%);
-  /*top: 10%;*/
 }
+
 #gameZone div {
   width: 15px;
   height: 15px;
@@ -29,7 +51,10 @@ div, p, span {
 .active {
   background: #00C790;
 }
-.pig {
+.active0 {
+  background: #008080;
+}
+.meat {
   background-image: url(resources/pig.png);
   background-size: 100%;
   background-position: center;
@@ -41,12 +66,17 @@ div, p, span {
 
   <body>
 
-    <h1>Snake</h1>
-
-
     <!--<div id="qunit"></div>-->
     <!--<div id="qunit-fixture"></div>-->
-    <div id="gameZone"></div>
+    <div class="wrap">
+      <div class="content">
+        <div> 
+          <h1>Python</h1> 
+          <p id="stats"></p>
+        </div>
+        <div id="gameZone"></div>
+      </div>
+    </div>
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.js"></script>
     <!--<script src="qunit-2.4.0.js"></script>-->
