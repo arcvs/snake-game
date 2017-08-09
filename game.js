@@ -1,182 +1,207 @@
 "use strict"
+
 var LEFT    = 37;
 var UP      = 38;
 var RIGHT   = 39;
 var DOWN    = 40;
 var PAUSE   = 32;
 
+var domBlockId = $('#gameZone');
+var statsBlockId = $('#stats');
 
-function pip(x,y){
-  return x + y;
-}
 
 function Field(cols, rows) {
-	this.cols = cols;
-	this.rows = rows;
-	this.numberSectors = this.cols * this.rows;
+  this.cols = cols;
+  this.rows = rows;
+  this.numberSectors = this.cols * this.rows;
 
-	this.hunger = true;
-	this.numberSectorMeat;
+  this.hunger = false;
+  this.positionMeat;
+  this.cells;
+  this.generationMap();
 };
 
 Field.prototype.generationMap = function() {
-	for (var i = 0; i < this.numberSectors; i++) 
-		$('#gameZone').append('<div>');
+  for (var i = 0; i < this.numberSectors; i++) {
+    domBlockId.append('<div>');
+  }
 
-	$('#gameZone').css('width', this.cols * 15 + this.cols);
+  domBlockId.css('width', this.cols * 15 + this.cols);
+
+  this.cells = domBlockId.children();
 };
 
-Field.prototype.generationMeat = function() {
-	this.hunger = false;
-	function getRandomInt(min, max) {
-		return Math.floor(Math.random() * (max - min + 1)) + min;
-	};
-	this.numberSectorMeat = getRandomInt(0, this.numberSectors - 1);
-	$("#gameZone").children()[ this.numberSectorMeat ].className = 'pig';
+Field.prototype.generationMeat = function(python) {
+
+  var self = this;
+
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  (function checkPositionPythonAndMeat() {
+    self.positionMeat = getRandomInt(0, self.numberSectors - 1);
+    python.forEach(function(item, i){
+      if (item === self.positionMeat) {
+        return checkPositionPythonAndMeat();
+      }
+    })
+  })()
+
+  this.hunger = false;
+  this.cells[this.positionMeat].className = 'meat';
 };
 
-function Pixel(x, y) {
-	this.color = '#';
-	this.x = x;
-	this.y = y;
+function converterPositionToAxes(field, a) {
+  var x = a % field.cols;
+  var y = Math.floor(a / field.cols);
+  return {x: x, y: y};
 };
 
-function Snake( field ) {
-
-	var self = this;
-
-	this.field = field;
-	this.activity = true;
-	this.speed = 200;
-
-	this.body || this.startPositionBody();
-	this.directionHead = { x : 0, y : 0 };
-	this.numberSectorHead;
-
-	this.stomach = [];
-
-	this._tempPosition = {};
-	this.visualization = function() {
-		this.body.forEach( function(iteam, i) {
-			if ( self.activity ) self._tempPosition = self._render( i );
-		});
-	};
-	
-	var fieldDOM = $("#gameZone").children();
-	
-	this._render = function(part) {
-
-		if ( !this.directionHead.x && !this.directionHead.y ) {
-			fieldDOM[ this.body[part].y  + this.body[part].x ].className = 'active';
-			return false;
-		}
-
-		var lengthSnake = this.body.length - 1;
-		var tempX = this.body[part].x;
-		var tempY = this.body[part].y;
-
-		if ( part == 0 ) {
-			this.body[0].x += this.directionHead.x;
-			this.body[0].y += this.directionHead.y * this.field.cols;
-
-			this.throughFaces();
-			this.numberSectorHead = this.body[0].x + this.body[0].y;
-			this.loop();
-
-			this.eatsMeat( this.body[lengthSnake].x, this.body[lengthSnake].y );
-
-			if ( !this.activity ) return;
-		} else {
-			this.body[part].x = this._tempPosition.x;
-			this.body[part].y = this._tempPosition.y;
-		}
-
-		fieldDOM[ this.body[part].y  + this.body[part].x ].className = 'active';
-		fieldDOM[ tempY + tempX ].className = '';
-		
-		return {x: tempX, y: tempY};
-	};
-}; 
-
-Snake.prototype.eatsMeat = function(bodyTailX, bodyTailY) {
-	if ( this.numberSectorHead == this.field.numberSectorMeat ) {
-		this.body.push( new Pixel( bodyTailX, bodyTailY ) );
-		this.field.hunger = true;
-		$("#gameZone").children()[this.field.numberSectorMeat].className = '';
-		this.speed -= 100;
-	}
+function converterAxesToPosition(field, a, b) {
+  var position = b * field.cols + a;
+  return position;
 };
 
-Snake.prototype.throughFaces = function() {
-	if ( this.body[0].x < 0 ) this.body[0].x = this.field.cols - 1;
-	if ( this.body[0].x > this.field.cols - 1 ) this.body[0].x = 0;
-	if ( this.body[0].y < 0 ) this.body[0].y = this.field.cols * this.field.rows - this.field.cols;
-	if ( this.body[0].y > this.field.cols * this.field.rows - this.field.cols ) this.body[0].y = 0;
+function Python(game, field) {
+  this.direction = {x : 0, y : 0};
+  this.body = this.setStartPositionFild(field);
+  this.nextPositionStep = NaN;
+
+  this._step = function(i) {
+
+    var backStep = this.body[i];
+
+    if(i === 0) {
+      var head = converterPositionToAxes(field, this.body[i]);
+      head.x += this.direction.x;
+      head.y += this.direction.y;
+      this.throughWallsOn(head);
+      this.body[i] = converterAxesToPosition(field, head.x, head.y);
+
+      this.deadLoop(this.body[i]);
+      this.eatsMeat(this.body[i]);
+    } else {
+      // NaN - обеспечивает правильную работу части тела в нулевой позиции 
+      this.body[i] = isNaN(this.nextPositionStep) ? backStep : this.nextPositionStep;
+    }
+
+    if (game.gameover) { 
+      return 0; 
+    }
+
+    field.cells[this.body[i]].className = 'active' + (!i?0:'');
+
+    if (this.direction.x || this.direction.y) {
+      field.cells[backStep].className = '';
+      return backStep;
+    }
+  }
 };
 
-Snake.prototype.loop = function() {
-	var self = this;
-	this.body.forEach(function(partBody, i){
-		if ( self.numberSectorHead == (partBody.x + partBody.y) && i != 0 )
-			self.bloodyDeath();
-	});
+Python.prototype.render = function() {
+  var self = this;
+  this.body.forEach(function(iteam, i) {
+    self.nextPositionStep = self._step(i);
+  });
+}
+
+Python.prototype.throughWallsOn = function(head) {
+  if (head.x < 0) head.x = field.cols - 1;
+  if (head.y < 0) head.y = field.rows - 1;
+  if (head.x >= field.cols) head.x = 0;
+  if (head.y >= field.rows) head.y = 0;
 };
 
-Snake.prototype.sleep = function() {
-	//this.pauseSnake = ( this.pauseSnake ) ? false : this.directionHead;
-	this.directionHead = {x: 0, y: 0};
+Python.prototype.setStartPositionFild = function(field) {
+  var position = field.cols * field.rows / 2 - field.cols / 2;
+  return [position, position-1];
 };
 
-Snake.prototype.bloodyDeath = function() {
-	this.activity = false;
-	$("#gameZone").children()[this.numberSectorHead].style.background = 'red';
+Python.prototype.deadLoop = function(positionHead) {
+  this.body.forEach(function(posPart, i){
+    if (positionHead === posPart && i !== 0) {
+      game.gameover = 1;
+      field.cells[posPart].style.background = 'red';
+    }
+  });
 };
 
-Snake.prototype.startPositionBody = function() {
-	var x = Math.floor( this.field.cols / 2 );
-	var y = Math.floor( this.field.rows / 2 );
-	this.body = [{ x: x, y: y * this.field.cols },{ x: x - 1, y: y * this.field.cols }];
+Python.prototype.eatsMeat = function(positionHead) {
+  if (positionHead === field.positionMeat) {
+    this.body.push(0);
+    field.hunger = true;
+    field.cells[field.positionMeat].className = '';
+  }
 };
 
-Snake.prototype.noBackStep = function() {
+function Game(){
+  this.speed = 200;
+  this.active = 0;
+  this.gameover = 0;
+  //this.level = 1;
+  this.life = 5;
+}
+
+Game.prototype.run = function(field, python) {
+
+  var self = this;
+
+  python.render();
+  statsBlockId.text('Speed: ' + this.speed + 'ms');
+
+  (function setTime(){
+    field.generationMeat(python.body);
+    var timerIteration = setInterval( function() {
+      if (field.hunger) {
+        self.speed -= 5;
+        statsBlockId.text('Speed: ' + self.speed + 'ms');
+        clearInterval( timerIteration );
+        setTime();
+      }
+      if(self.active && !self.gameover) { 
+        python.render();
+      }
+    }, self.speed);
+  })()
 };
 
-Snake.prototype.upTimeInterval = function() {
-};
+Game.prototype.start = function() {
+  this.active = 1;
+}
+Game.prototype.pause = function() {
+  this.active = (this.active === 0) ? 1 : 0;
+}
 
-Snake.prototype.run = function() {
-	var self = this;
-	var timerIteration = setInterval( function() {
+var game = new Game();
 
-		if ( self.field.hunger ) self.field.generationMeat(self.body);
+var field = new Field(28, 20);
+var python = new Python(game, field);
 
-		if ( self.status ) { 
-			clearInterval( timerIteration ); 
-		} else {
-			self.visualization();
-		}
-	}, self.speed );
-};
+game.run(field, python);
 
-var field = new Field( 10, 8   );
+function dispatcherEventKey(keyCode) {
 
-field.generationMap();
+  //var bufferCurentKey = keyCode;
 
-var snake = new Snake( field );
-snake.run();
+  //if (bufferCurentKey === UP  && keyCode === UP) {
+    //return 1;
+    //console.log( keyCode );
+  //}
 
-function dispatcher(step) {
-	switch ( step ) {
-		case UP      : snake.directionHead = {x : 0, y : -1}; break;
-		case DOWN    : snake.directionHead = {x : 0, y : +1}; break;
-		case LEFT    : snake.directionHead = {x : -1, y : 0}; break;
-		case RIGHT   : snake.directionHead = {x : +1, y : 0}; break;
-		case PAUSE   : snake.sleep(); break;
-	};
+  switch (keyCode) {
+    case UP      : python.direction = {x : 0, y : -1}; game.start(); break;
+    case DOWN    : python.direction = {x : 0, y : +1}; game.start(); break;
+    case LEFT    : python.direction = {x : -1, y : 0}; game.start(); break;
+    case RIGHT   : python.direction = {x : +1, y : 0}; game.start(); break;
+    case PAUSE   : game.pause(); break;
+  };
 };
 
 document.onkeydown = function(event) {
-	if((event.keyCode >= 32) && (event.keyCode <= 40)) {
-		dispatcher(event.keyCode);
-	};
+  //console.log(event.keyCode);
+  if((event.keyCode >= 32) && (event.keyCode <= 40)) {
+    dispatcherEventKey(event.keyCode);
+  };
 };
+
