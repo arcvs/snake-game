@@ -36,24 +36,21 @@ Field.prototype.generationMeat = function() {
 		return Math.floor(Math.random() * (max - min + 1)) + min;
 	};
 	this.numberSectorMeat = getRandomInt(0, this.numberSectors - 1);
-	$("#gameZone").children()[ this.numberSectorMeat ].className = 'pig';
+	this.cells[this.numberSectorMeat].className = 'pig';
 };
 
 function converterPositionToAxes(field, a) {
   var x = a % field.cols;
   var y = Math.floor(a / field.cols);
-
+  //console.log({x: x, y: y});
   return {x: x, y: y};
 }
 
 function converterAxesToPosition(field, a, b) {
-  var position = b * field.cols - (field.cols - a);
-
-  return position-1;
+  var position = b * field.cols + a;
+  //console.log(position);
+  return position;
 }
-
-//console.log(converterPositionToAxes({cols: 6, rows: 3}, 0));
-//console.log(converterAxesToPosition({cols: 6, rows: 3}, 1, 1));
 
 function Python(game, field) {
 
@@ -63,31 +60,29 @@ function Python(game, field) {
 
   this._step = function(i) {
 
-    var backStepAxes = {x: this.body[i].x, y: this.body[i].y};
+    var backStep = this.body[i];
 
     if(i === 0) {
-      this.body[i].x += this.direction.x;
-      this.body[i].y += this.direction.y;
-
-      this.throughWallsOn();
+      var head = converterPositionToAxes(field, this.body[i]);
+      head.x += this.direction.x;
+      head.y += this.direction.y;
+      this.throughWallsOn(head);
+      this.body[i] = converterAxesToPosition(field, head.x, head.y);
       this.deadLoop(this.body[i]);
       this.eatsMeat(this.body[i]);
     } else {
-      this.body[i] = this.nextStepAxes || backStepAxes;
+      this.body[i] = this.nextStepAxes || backStep;
     }
 
     if (game.gameover) { 
       return 0; 
     }
 
-    var nextPos = converterAxesToPosition(field, this.body[i].x, this.body[i].y);
-    var backPos = converterAxesToPosition(field, backStepAxes.x, backStepAxes.y);
-
-    field.cells[nextPos].className = 'active';
+    field.cells[this.body[i]].className = 'active';
 
     if (this.direction.x || this.direction.y) {
-      field.cells[backPos].className = '';
-      return backStepAxes;
+      field.cells[backStep].className = '';
+      return backStep;
     }
   }
 }
@@ -99,48 +94,35 @@ Python.prototype.render = function() {
   });
 }
 
-Python.prototype.throughWallsOn = function() {
-	if (this.body[0].x < 1) this.body[0].x = field.cols;
-	if (this.body[0].x > field.cols) this.body[0].x = 1;
-  if (this.body[0].y < 1) this.body[0].y = field.rows;
-  if (this.body[0].y > field.rows) this.body[0].y = 1;
+Python.prototype.throughWallsOn = function(head) {
+  if (head.x < 0) head.x = field.cols - 1;
+  if (head.y < 0) head.y = field.rows - 1;
+  if (head.x >= field.cols) head.x = 0;
+  if (head.y >= field.rows) head.y = 0;
 };
 
 Python.prototype.setStartPositionFild = function(field) {
-	var x = Math.floor(field.cols / 2);
-	var y = Math.floor(field.rows / 2);
-  return [
-    { x: x, y: y }, 
-    { x: x - 1, y: y }, 
-    { x: x - 2, y: y }, 
-    { x: x - 3, y: y }, 
-    { x: x - 4, y: y }, 
-    { x: x - 5, y: y }, 
-    { x: x - 6, y: y }
-  ];
+  var position = field.cols * field.rows / 2 - field.cols / 2;
+  return [position, position-1, position-2, position-3, position-4, position-5];
 }
 
-Python.prototype.deadLoop = function(posAxesHead) {
-	this.body.forEach(function(posPart, i){
-    if (posAxesHead.x === posPart.x && posAxesHead.y === posPart.y && i !== 0) {
+Python.prototype.deadLoop = function(positionHead) {
+  this.body.forEach(function(posPart, i){
+    if (positionHead === posPart && i !== 0) {
       game.gameover = 1;
-      var position = converterAxesToPosition(field, posAxesHead.x, posAxesHead.y);
-      field.cells[position].style.background = 'red';
+      field.cells[posPart].style.background = 'red';
     }
-	});
+  });
 }
 
-Python.prototype.eatsMeat = function(posAxesHead) {
-
-  var positionHead = converterAxesToPosition(field, posAxesHead.x, posAxesHead.y);
-
+Python.prototype.eatsMeat = function(positionHead) {
   if (positionHead === field.numberSectorMeat) {
     console.log('eat');
-		//this.body.push( new Pixel( bodyTailX, bodyTailY ) );
-		//this.field.hunger = true;
-		//$("#gameZone").children()[this.field.numberSectorMeat].className = '';
-		//this.speed -= 100;
-	}
+    this.body.push(new Pixel(bodyTailX, bodyTailY));
+    this.field.hunger = true;
+    field.cells[this.field.numberSectorMeat].className = '';
+    this.speed -= 100;
+  }
 };
 
 function Game(){
