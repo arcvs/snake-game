@@ -149,6 +149,7 @@ Game.prototype.run = function(field, python) {
 
   python.render();
   statsBlockId.text('Speed: ' + this.speed + 'ms');
+  BUFFER_KEY = undefined;
 
   (function setTime(){
     field.generationMeat(python.body);
@@ -176,12 +177,11 @@ Game.prototype.pause = function() {
 
 function dispatcherEventKey(keyCode) {
 
-  if(BUFFER_KEY === DOWN && keyCode === UP || BUFFER_KEY === UP && keyCode === DOWN) {
-    return 1;
-  }
-
-  if(BUFFER_KEY === RIGHT && keyCode === LEFT || BUFFER_KEY === LEFT && keyCode === RIGHT) {
-    return 1;
+  if(BUFFER_KEY){
+    if(BUFFER_KEY === DOWN && keyCode === UP) return 1;
+    if(BUFFER_KEY === UP && keyCode === DOWN) return 1;
+    if(BUFFER_KEY === RIGHT && keyCode === LEFT) return 1;
+    if(BUFFER_KEY === LEFT && keyCode === RIGHT) return 1;
   }
 
   BUFFER_KEY = keyCode;
